@@ -70,7 +70,7 @@ def send_slack(text: str) -> bool:
         return False
 
 
-def deliver(report_text: str, subject: str = "Weekly Market Digest") -> None:
+def deliver(report_text: str, subject: str = "Daily Market Digest") -> None:
     sent_email = send_email(subject, report_text)
     sent_slack = send_slack(report_text)
 
