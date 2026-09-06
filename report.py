@@ -1,5 +1,5 @@
 """
-Turns per-asset technical + news data into a short, scannable weekly digest
+Turns per-asset technical + news data into a short, scannable daily digest
 (Slack/email style: emoji, short lines, no fluff).
 """
 from datetime import date
@@ -86,7 +86,7 @@ def build_report(
     """asset_results: list of {"asset": ..., "ta": ..., "headlines": [...]}
     stock_results / swing_results / gem_results: same shape, optional"""
     today = date.today().strftime("%B %d, %Y")
-    header = f"📊 *Weekly Market Digest — {today}*\n" \
+    header = f"📊 *Daily Market Digest — {today}*\n" \
               "Auto-generated technical read + headlines. Not financial advice.\n"
 
     blocks = [build_asset_block(r["asset"], r["ta"], r["headlines"]) for r in asset_results]
