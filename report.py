@@ -69,9 +69,22 @@ def build_stock_block(stock: dict, ta: dict | None, headlines: list[dict]) -> st
     return build_asset_block(stock, ta, headlines)
 
 
-def build_report(asset_results: list[dict], stock_results: list[dict] | None = None) -> str:
+def build_section(title: str, results: list[dict], empty_note: str) -> str:
+    """Generic section builder for any list of {"asset","ta","headlines"}."""
+    if not results:
+        return f"*{title}*\n_{empty_note}_"
+    blocks = [build_asset_block(r["asset"], r["ta"], r["headlines"]) for r in results]
+    return f"*{title}*\n\n" + "\n\n".join(blocks)
+
+
+def build_report(
+    asset_results: list[dict],
+    stock_results: list[dict] | None = None,
+    swing_results: list[dict] | None = None,
+    gem_results: list[dict] | None = None,
+) -> str:
     """asset_results: list of {"asset": ..., "ta": ..., "headlines": [...]}
-    stock_results: same shape, for individual watchlist stocks (optional)"""
+    stock_results / swing_results / gem_results: same shape, optional"""
     today = date.today().strftime("%B %d, %Y")
     header = f"📊 *Weekly Market Digest — {today}*\n" \
               "Auto-generated technical read + headlines. Not financial advice.\n"
@@ -85,9 +98,26 @@ def build_report(asset_results: list[dict], stock_results: list[dict] | None = N
         sections.append("*📈 Stocks to Watch*")
         sections.append("\n\n".join(stock_blocks))
 
+    if swing_results is not None:
+        sections.append(build_section(
+            "🚀 Swing Trade Opportunities",
+            swing_results,
+            "No qualifying bullish setups found in day gainers/most actives this week.",
+        ))
+
+    if gem_results is not None:
+        sections.append(build_section(
+            "💎 Hidden Gem / Growth Candidates",
+            gem_results,
+            "No qualifying setups found in this week's growth/small-cap screens.",
+        ))
+
     footer = "\n_Rules: trend from price vs SMA20/50/200, momentum from RSI+MACD, " \
              "levels from 20-day swing high/low & ATR. 🔥 = notable news " \
-             "(earnings, M&A, ratings changes, etc). Review before trading._"
+             "(earnings, M&A, ratings changes, etc). Swing/gem picks are " \
+             "algorithmically screened from free market data, not personal " \
+             "recommendations — small/micro caps carry higher risk and " \
+             "volatility. Review before trading._"
     sections.append(footer)
 
     return "\n\n".join(sections)
