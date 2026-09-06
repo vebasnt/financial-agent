@@ -68,6 +68,31 @@ NOTABLE_KEYWORDS = [
     "fda approval", "antitrust",
 ]
 
+# --- Swing trade / hidden gem discovery ---
+# Uses yfinance's free built-in Yahoo screeners (no key, no paid screener
+# needed) to surface candidates beyond the fixed watchlist above, then runs
+# the same technical rules on whatever surfaces to filter for genuine setups.
+
+# Screens used to find short-term momentum/swing candidates.
+SWING_SCREENS = ["day_gainers", "most_actives"]
+
+# Screens used to find smaller, higher-growth "hidden gem" candidates —
+# small_cap_gainers (<$2B market cap), aggressive_small_caps (low recent EPS
+# growth but building), growth_technology_stocks (25%+ revenue & EPS growth),
+# undervalued_growth_stocks (cheap PE/PEG with 25%+ EPS growth).
+GEM_SCREENS = [
+    "small_cap_gainers",
+    "aggressive_small_caps",
+    "growth_technology_stocks",
+    "undervalued_growth_stocks",
+]
+
+MAX_CANDIDATES_PER_SCREEN = 15    # how many raw results to pull per screen
+MAX_SWING_CANDIDATES_TO_ANALYZE = 20   # cap on how many get full TA (keeps runtime sane)
+MAX_GEM_CANDIDATES_TO_ANALYZE = 40
+SWING_TOP_N = 5     # how many make it into the final report
+GEM_TOP_N = 5
+
 # How many days back to pull news for
 NEWS_LOOKBACK_DAYS = 7
 
