@@ -9,10 +9,15 @@ is configured via env vars — see send_report.py).
 """
 import logging
 
-from config import ASSETS
-from data_fetch import fetch_all
+from config import ASSETS, STOCK_WATCHLIST
+from data_fetch import fetch_all, fetch_price_history
 from technical_analysis import analyze
-from news_fetch import fetch_headlines, match_headlines_to_asset
+from news_fetch import (
+    fetch_headlines,
+    match_headlines_to_asset,
+    fetch_stock_headlines,
+    tag_notable,
+)
 from report import build_report
 from send_report import deliver
 
@@ -21,10 +26,10 @@ log = logging.getLogger(__name__)
 
 
 def run() -> str:
-    log.info("fetching price data for %d assets", len(ASSETS))
+    log.info("fetching price data for %d broad-market assets", len(ASSETS))
     price_data = fetch_all(ASSETS)
 
-    log.info("fetching news headlines")
+    log.info("fetching general market news")
     all_headlines = fetch_headlines()
     log.info("got %d headlines total", len(all_headlines))
 
@@ -33,9 +38,19 @@ def run() -> str:
         df = price_data.get(asset["ticker"])
         ta = analyze(df) if df is not None else None
         headlines = match_headlines_to_asset(all_headlines, asset["keywords"], limit=5)
+        headlines = tag_notable(headlines)
         results.append({"asset": asset, "ta": ta, "headlines": headlines})
 
-    report_text = build_report(results)
+    log.info("fetching price data + dedicated news for %d watchlist stocks", len(STOCK_WATCHLIST))
+    stock_results = []
+    for stock in STOCK_WATCHLIST:
+        df = fetch_price_history(stock["ticker"])
+        ta = analyze(df) if df is not None else None
+        headlines = fetch_stock_headlines(stock["ticker"])
+        headlines = tag_notable(headlines)
+        stock_results.append({"asset": stock, "ta": ta, "headlines": headlines})
+
+    report_text = build_report(results, stock_results)
     deliver(report_text)
     return report_text
 
