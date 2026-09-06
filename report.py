@@ -51,22 +51,43 @@ def build_asset_block(asset: dict, ta: dict | None, headlines: list[dict]) -> st
         )
 
     if headlines:
+        notable = [h for h in headlines if h.get("notable")]
+        routine = [h for h in headlines if not h.get("notable")][:MAX_HEADLINES_PER_ASSET]
+        shown = notable + routine
         lines.append("News:")
-        for h in headlines[:MAX_HEADLINES_PER_ASSET]:
-            lines.append(f"  • {h['title']} ({h['source']})")
+        for h in shown:
+            prefix = "🔥 " if h.get("notable") else "  • "
+            lines.append(f"{prefix}{h['title']} ({h['source']})")
 
     return "\n".join(lines)
 
 
-def build_report(asset_results: list[dict]) -> str:
-    """asset_results: list of {"asset": ..., "ta": ..., "headlines": [...]}"""
+def build_stock_block(stock: dict, ta: dict | None, headlines: list[dict]) -> str:
+    """Same shape as build_asset_block but for individual watchlist stocks —
+    kept as a thin wrapper since the format is identical, just labeled
+    separately in the report."""
+    return build_asset_block(stock, ta, headlines)
+
+
+def build_report(asset_results: list[dict], stock_results: list[dict] | None = None) -> str:
+    """asset_results: list of {"asset": ..., "ta": ..., "headlines": [...]}
+    stock_results: same shape, for individual watchlist stocks (optional)"""
     today = date.today().strftime("%B %d, %Y")
     header = f"📊 *Weekly Market Digest — {today}*\n" \
               "Auto-generated technical read + headlines. Not financial advice.\n"
 
     blocks = [build_asset_block(r["asset"], r["ta"], r["headlines"]) for r in asset_results]
 
-    footer = "\n_Rules: trend from price vs SMA20/50/200, momentum from RSI+MACD, " \
-             "levels from 20-day swing high/low & ATR. Review before trading._"
+    sections = [header, "\n\n".join(blocks)]
 
-    return header + "\n\n" + "\n\n".join(blocks) + "\n\n" + footer
+    if stock_results:
+        stock_blocks = [build_stock_block(r["asset"], r["ta"], r["headlines"]) for r in stock_results]
+        sections.append("*📈 Stocks to Watch*")
+        sections.append("\n\n".join(stock_blocks))
+
+    footer = "\n_Rules: trend from price vs SMA20/50/200, momentum from RSI+MACD, " \
+             "levels from 20-day swing high/low & ATR. 🔥 = notable news " \
+             "(earnings, M&A, ratings changes, etc). Review before trading._"
+    sections.append(footer)
+
+    return "\n\n".join(sections)
