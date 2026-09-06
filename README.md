@@ -1,6 +1,6 @@
-# Weekly Market Digest Agent
+# Daily Market Digest Agent
 
-Fully automated, free-data agent that every **Monday** pulls prices + news for
+Fully automated, free-data agent that every **weekday morning** pulls prices + news for
 Nasdaq, S&P 500, Dow, BIST 100, Bitcoin, Ethereum, Gold, and Silver, runs
 basic technical analysis, and sends you a short digest with rule-based trade
 ideas (entry / stop / target).
@@ -18,8 +18,8 @@ averages, RSI, MACD, recent swing highs/lows), not a prediction.
 | `news_fetch.py` | Pulls headlines from free RSS feeds, matches them to assets by keyword |
 | `report.py` | Builds the short Slack/email-style digest text |
 | `send_report.py` | Sends the digest via email (SMTP) and/or Slack webhook |
-| `main.py` | Orchestrates everything — this is what runs each week |
-| `.github/workflows/weekly-report.yml` | Runs `main.py` automatically every Monday via GitHub Actions (free) |
+| `main.py` | Orchestrates everything — this is what runs each day |
+| `.github/workflows/daily-report.yml` | Runs `main.py` automatically every weekday via GitHub Actions (free) |
 
 ## Setup (5–10 minutes)
 
@@ -43,13 +43,15 @@ averages, RSI, MACD, recent swing highs/lows), not a prediction.
    You can set up both, one, or neither (if neither, the report just prints
    to the Actions log so you can copy it manually).
 
-3. **That's it.** The workflow is scheduled for `0 11 * * 1` (11:00 UTC every
-   Monday). Edit the cron line in `.github/workflows/weekly-report.yml` to
-   change the time.
+3. **That's it.** The workflow is scheduled for `0 11 * * 1-5` (11:00 UTC,
+   every Monday–Friday — skips weekends since US/BIST markets are closed).
+   Edit the cron line in `.github/workflows/daily-report.yml` to change the
+   time, or change `1-5` to `*` if you want it to run on weekends too (e.g.
+   for the crypto assets, which trade 24/7).
 
-4. **Test it immediately** without waiting for Monday: go to your repo's
-   `Actions` tab → `Weekly Market Digest` → `Run workflow` (this works because
-   of the `workflow_dispatch` trigger).
+4. **Test it immediately** without waiting for the next scheduled run: go to
+   your repo's `Actions` tab → `Daily Market Digest` → `Run workflow` (this
+   works because of the `workflow_dispatch` trigger).
 
 ## Running locally
 
