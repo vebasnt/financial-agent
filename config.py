@@ -25,7 +25,23 @@ ASSETS = [
      "keywords": ["silver price", "silver "]},
 ]
 
-# Free, no-auth RSS feeds. Add more if you find good ones.
+# Individual stocks to watch. Unlike ASSETS above (which are matched against
+# broad market feeds by keyword), each of these gets its OWN dedicated Yahoo
+# Finance news feed per ticker — much more precise, since it only returns
+# headlines actually about that company. Add/remove tickers freely; any
+# valid Yahoo Finance ticker works (check the symbol on finance.yahoo.com).
+STOCK_WATCHLIST = [
+    {"name": "Apple", "ticker": "AAPL"},
+    {"name": "Microsoft", "ticker": "MSFT"},
+    {"name": "Nvidia", "ticker": "NVDA"},
+    {"name": "Amazon", "ticker": "AMZN"},
+    {"name": "Alphabet (Google)", "ticker": "GOOGL"},
+    {"name": "Meta", "ticker": "META"},
+    {"name": "Tesla", "ticker": "TSLA"},
+]
+
+# Free, no-auth RSS feeds for the broad-market ASSETS above. Add more if you
+# find good ones.
 NEWS_FEEDS = [
     "https://finance.yahoo.com/news/rssindex",
     "https://www.investing.com/rss/news_25.rss",       # stock market news
@@ -34,11 +50,33 @@ NEWS_FEEDS = [
     "https://feeds.reuters.com/reuters/businessNews",
 ]
 
+# Per-ticker Yahoo Finance news feed template, used for STOCK_WATCHLIST.
+# Free, no key. Fill in the ticker symbol.
+STOCK_NEWS_FEED_TEMPLATE = (
+    "https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker}&region=US&lang=en-US"
+)
+
+# Headline is flagged "notable" (highlighted in the report, and exempt from
+# the per-asset headline cap) if its title contains any of these — keep this
+# list focused on genuinely market-moving language, not routine coverage.
+NOTABLE_KEYWORDS = [
+    "earnings", "beats", "misses", "guidance", "upgrade", "downgrade",
+    "acquisition", "acquires", "merger", "lawsuit", "recall", "resign",
+    "ceo", "layoffs", "bankruptcy", "sec probe", "investigation",
+    "halted", "surge", "plunge", "soar", "crash", "record high",
+    "record low", "buyback", "dividend cut", "fraud", "hack", "breach",
+    "fda approval", "antitrust",
+]
+
 # How many days back to pull news for
 NEWS_LOOKBACK_DAYS = 7
 
 # How many days of price history to pull for technical analysis
 PRICE_HISTORY_DAYS = 400  # enough for a 200-day SMA
 
-# Max headlines to show per asset in the final report
+# Max headlines to show per asset in the final report (notable headlines are
+# always shown in addition to this cap, not counted against it)
 MAX_HEADLINES_PER_ASSET = 3
+
+# Max stocks' worth of headlines to fetch per ticker before filtering
+MAX_HEADLINES_PER_STOCK_FETCH = 10
