@@ -93,8 +93,10 @@ MAX_GEM_CANDIDATES_TO_ANALYZE = 40
 SWING_TOP_N = 5     # how many make it into the final report
 GEM_TOP_N = 5
 
-# How many days back to pull news for
-NEWS_LOOKBACK_DAYS = 7
+# How many days back to pull news for. Kept short since this now runs daily —
+# a 7-day window would show the same headlines repeating every morning.
+# Set to 2 (not 1) as a small buffer for weekends/timezone gaps.
+NEWS_LOOKBACK_DAYS = 2
 
 # How many days of price history to pull for technical analysis
 PRICE_HISTORY_DAYS = 400  # enough for a 200-day SMA
