@@ -14,6 +14,8 @@ from config import (
     STOCK_NEWS_FEED_TEMPLATE,
     MAX_HEADLINES_PER_STOCK_FETCH,
     NOTABLE_KEYWORDS,
+    POSITIVE_NEWS_KEYWORDS,
+    NEGATIVE_NEWS_KEYWORDS,
 )
 
 log = logging.getLogger(__name__)
@@ -121,3 +123,20 @@ def tag_notable(headlines: list[dict]) -> list[dict]:
     for h in headlines:
         h["notable"] = is_notable(h["title"])
     return sorted(headlines, key=lambda h: not h["notable"])
+
+
+def score_catalyst(headlines: list[dict]) -> tuple[float, int, int]:
+    """Scores news catalyst DIRECTION (not just presence) for a stock, based
+    on simple keyword matching against POSITIVE/NEGATIVE_NEWS_KEYWORDS.
+
+    Returns (score, positive_count, negative_count) where score is 0-1:
+    0.5 = neutral (no headlines, or positive/negative cancel out), 1.0 =
+    strongly positive, 0.0 = strongly negative. Net count is capped at ±3
+    distinct catalysts so one extra headline doesn't swing the score wildly.
+    """
+    pos = sum(1 for h in headlines if any(k in h["title"].lower() for k in POSITIVE_NEWS_KEYWORDS))
+    neg = sum(1 for h in headlines if any(k in h["title"].lower() for k in NEGATIVE_NEWS_KEYWORDS))
+    net = pos - neg
+    normalized = max(-1.0, min(1.0, net / 3))
+    score = (normalized + 1) / 2
+    return score, pos, neg
