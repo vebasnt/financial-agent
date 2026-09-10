@@ -93,6 +93,48 @@ MAX_GEM_CANDIDATES_TO_ANALYZE = 40
 SWING_TOP_N = 5     # how many make it into the final report
 GEM_TOP_N = 5
 
+# --- "Today's Top Pick" ---
+# Combines technical conviction, news catalyst strength, risk/reward quality,
+# and liquidity into ONE composite score to surface a single best "trade
+# today" candidate, drawn from the watchlist + swing + gem pools above (no
+# extra Yahoo Finance calls needed — reuses data already fetched for those
+# sections). A candidate must clear a minimum bar on EVERY dimension, not
+# just score well on average — so nothing wins by being extreme in one area
+# while weak everywhere else.
+
+# Liquidity floor: 20-day average dollar volume (avg volume * price). Below
+# this, a setup may look great on a chart but be hard to actually trade.
+TOP_PICK_MIN_AVG_DOLLAR_VOLUME = 5_000_000
+
+# Minimum (target - entry) / (entry - stop) required to even be considered.
+TOP_PICK_MIN_RISK_REWARD = 1.5
+
+# How the 4 dimensions combine into one composite score (must sum to 1.0).
+TOP_PICK_WEIGHTS = {
+    "technical": 0.35,
+    "catalyst": 0.30,
+    "risk_reward": 0.20,
+    "volume": 0.15,
+}
+
+# Headline keyword lexicon used to score news catalyst DIRECTION (separate
+# from NOTABLE_KEYWORDS above, which only flags "worth mentioning" — this
+# flags "good news" vs "bad news"). Simple keyword matching, not true NLP
+# sentiment — good enough to avoid picking a stock whose dominant recent
+# headline is bad news, not sophisticated enough to catch subtler framing.
+POSITIVE_NEWS_KEYWORDS = [
+    "beats", "upgrade", "surge", "soar", "record high", "buyback",
+    "fda approval", "raises guidance", "raises forecast", "outperform",
+    "price target raised", "strong demand", "tops estimates",
+]
+NEGATIVE_NEWS_KEYWORDS = [
+    "misses", "downgrade", "plunge", "crash", "lawsuit", "recall",
+    "fraud", "bankruptcy", "investigation", "hack", "breach", "layoffs",
+    "resign", "dividend cut", "record low", "halted", "antitrust",
+    "cuts guidance", "cuts forecast", "price target cut", "sec probe",
+    "misses estimates",
+]
+
 # How many days back to pull news for. Kept short since this now runs daily —
 # a 7-day window would show the same headlines repeating every morning.
 # Set to 2 (not 1) as a small buffer for weekends/timezone gaps.
@@ -107,3 +149,36 @@ MAX_HEADLINES_PER_ASSET = 3
 
 # Max stocks' worth of headlines to fetch per ticker before filtering
 MAX_HEADLINES_PER_STOCK_FETCH = 10
+
+# --- "Today's Top Pick" scoring ---
+# Combines technical conviction, news catalyst strength, risk/reward
+# quality, and volume confirmation into one composite score to select a
+# single best stock, rather than just filtering to a list. Runs over the
+# already-computed watchlist + swing + gem candidates — no extra API calls.
+
+TOP_PICK_WEIGHTS = {
+    "technical": 0.35,
+    "catalyst": 0.30,
+    "risk_reward": 0.20,
+    "volume": 0.15,
+}
+
+# Same NOTABLE_KEYWORDS trigger the 🔥 flag elsewhere; these two lists give
+# that catalyst a *direction* so a lawsuit doesn't score the same as an
+# earnings beat. Keep this simple/keyword-based — it's not real NLP
+# sentiment, just a signal of which way a notable headline likely leans.
+POSITIVE_CATALYST_KEYWORDS = [
+    "beats", "upgrade", "surge", "soar", "record high", "buyback",
+    "fda approval", "acquisition", "acquires",
+]
+NEGATIVE_CATALYST_KEYWORDS = [
+    "misses", "downgrade", "plunge", "crash", "lawsuit", "recall",
+    "resign", "layoffs", "bankruptcy", "sec probe", "investigation",
+    "halted", "record low", "dividend cut", "fraud", "hack", "breach",
+    "antitrust",
+]
+
+# A candidate must clear ALL of these to be eligible as Top Pick — prevents
+# picking a name that's extreme on one dimension but weak everywhere else.
+TOP_PICK_MIN_TECHNICAL_CONVICTION = 0.5   # 0-1 scale
+TOP_PICK_MIN_RISK_REWARD_RATIO = 1.5      # actual (target-entry)/(entry-stop)
