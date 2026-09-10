@@ -1,5 +1,6 @@
 """
-Entry point. Run weekly (Monday, pre-market) via GitHub Actions cron.
+Entry point. Runs daily on weekday mornings (pre-market) via GitHub Actions
+cron — see .github/workflows/daily-report.yml.
 
   python main.py
 
@@ -28,6 +29,7 @@ from news_fetch import (
     tag_notable,
 )
 from screener import get_screener_candidates, scan_for_setups
+from top_pick import evaluate_candidates
 from report import build_report
 from send_report import deliver
 
@@ -96,7 +98,10 @@ def run() -> str:
     gem_results = _to_results(gem_scanned, GEM_TOP_N)
     log.info("found %d qualifying gem candidates", len(gem_results))
 
-    report_text = build_report(results, stock_results, swing_results, gem_results)
+    log.info("evaluating Today's Top Pick across all stock pools")
+    top_pick = evaluate_candidates([stock_results, swing_results, gem_results])
+
+    report_text = build_report(results, stock_results, swing_results, gem_results, top_pick)
     deliver(report_text)
     return report_text
 
